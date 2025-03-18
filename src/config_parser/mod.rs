@@ -21,7 +21,8 @@ fn find_config_file(dir: &Path) -> Option<PathBuf> {
 #[derive(Debug)]
 #[allow(dead_code)]
 pub struct Config {
-    output_file: String,
+    output_exe: String,
+    input_file: String,
     debug: bool,
 }
 
@@ -59,28 +60,45 @@ impl Config {
                         Mode::Bin => {
                             if word == "name" {
                                 let name = splits.next().unwrap();
-                                config.output_file = match name {
+                                config.output_exe = match name {
                                     x if x.is_empty()
                                         || x.contains([
                                             ' ', '"', '\'', '!', '@', '#', '$', '%', '^', '&', '*',
-                                            '+', '+', '{', '}', '[', ']', '\\', '|', ';', ':', ',',
-                                            '.', '<', '>',
+                                            '+', '{', '}', '[', ']', '\\', '|', ';', ':', ',', '.',
+                                            '<', '>',
                                         ]) =>
                                     {
-                                        return Err(anyhow::anyhow!("Malformated output name"));
+                                        return Err(anyhow::anyhow!(
+                                            "Malformated output name : {}",
+                                            name
+                                        ));
+                                    }
+                                    _ => name.to_string(),
+                                };
+                            } else if word == "input" {
+                                let name = splits.next().unwrap();
+                                config.input_file = match name {
+                                    x if x.is_empty()
+                                        || x.contains([
+                                            ' ', '"', '\'', '!', '@', '#', '$', '%', '^', '&', '*',
+                                            '+', '{', '}', '[', ']', '\\', '|', ';', ':', ',', '.',
+                                            '<', '>',
+                                        ]) =>
+                                    {
+                                        return Err(anyhow::anyhow!(
+                                            "Malformated input name : {}",
+                                            name
+                                        ));
                                     }
                                     _ => name.to_string(),
                                 };
                                 continue;
-                            }
-
-                            if word == "debug" {
+                            } else if word == "debug" {
                                 config.debug = match splits.next().unwrap() {
                                     "true" => true,
                                     "false" => false,
                                     _ => return Err(anyhow::anyhow!("Invalid value for debug")),
                                 };
-                                continue;
                             }
                         }
                         Mode::None => {}
@@ -99,8 +117,10 @@ impl Config {
     pub fn to_string(&self) -> String {
         let mut res = String::new();
 
+        // Print all bin options
         res.push_str("[bin]\n");
-        res.push_str(&format!("name={}\n", self.output_file));
+        res.push_str(&format!("name={}\n", self.output_exe));
+        res.push_str(&format!("input={}\n", self.input_file));
         res.push_str(&format!("debug={}\n", self.debug));
 
         res
@@ -110,7 +130,8 @@ impl Config {
 impl Default for Config {
     fn default() -> Self {
         Self {
-            output_file: String::from("/build/main"),
+            output_exe: String::from("/build/main"),
+            input_file: String::from("main.sbl"),
             debug: false,
         }
     }

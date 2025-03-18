@@ -95,9 +95,22 @@ impl Config {
         }
     }
 
+    #[allow(clippy::inherent_to_string)]
+    pub fn to_string(&self) -> String {
+        let mut res = String::new();
+
+        res.push_str("[bin]\n");
+        res.push_str(&format!("name={}\n", self.output_file));
+        res.push_str(&format!("debug={}\n", self.debug));
+
+        res
+    }
+}
+
+impl Default for Config {
     fn default() -> Self {
         Self {
-            output_file: String::from("/bin/main"),
+            output_file: String::from("/build/main"),
             debug: false,
         }
     }

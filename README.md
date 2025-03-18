@@ -116,7 +116,7 @@ func bar(x: impl WholeNumber) : {
 
 // Function that takes in another function that takes in a floating number (f8, f16, uf64)
 // and returns nothing and executes it
-func bazz(f: func(x: impl FloatNumber)) : impl FloatNumber {
+func bazz(f: |x: impl FloatNumber|) : impl FloatNumber {
   f(10)
 }
 ```
@@ -134,7 +134,7 @@ func add<T>(x: T, y: T) : T
 func add_and_print<T>(x: T, y: T) :
   // Traits uses PEMDAS to be evaluated, so to explain to the compiler that
   // T can either be WholeNumber OR FloatNumber AND Display, you **must** use parentheses
-  where T: impl (WholeNumber ? FloatNumber) & Display
+  where T : impl (WholeNumber ? FloatNumber) & Display
 {
   let res = add(x, y);
   println!("{} + {} = {}", .{x, y, res});
@@ -160,7 +160,7 @@ Person <- impl {
   }
 }
 
-Person : impl Display {
+Person <- impl Display {
   func fmt(&self, f: &mut Formatter) : Result {
     f.write("Person:\n")?;
     f.write("  Name: {}\n", .{name})?;

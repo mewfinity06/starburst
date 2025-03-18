@@ -1,9 +1,14 @@
+#![allow(unused_imports)]
+use std::fs::OpenOptions;
 use std::fs::{self, File};
 use std::io::Write;
 use std::path::Path;
 use std::path::PathBuf;
 
+use chrono::Local;
 use clap::*;
+use fern::Dispatch;
+use log::{error, info, warn};
 
 pub mod config_parser;
 use config_parser::*;
@@ -18,11 +23,35 @@ fn main() -> anyhow::Result<()> {
     let config = Config::new(dir)?;
     // println!("{:?}", config);
 
+    // Set up fern for logging
+    let log_file = OpenOptions::new()
+        .create(true)
+        .append(true)
+        .open("starburst.log")?;
+
+    Dispatch::new()
+        .format(|out, message, record| {
+            let now = Local::now();
+
+            out.finish(format_args!(
+                "[{}] [{}] {}: {}",
+                now.format("%Y-%m-%d %H:%M:%S"),
+                record.level(),
+                record.target(),
+                message
+            ))
+        })
+        .level(log::LevelFilter::Info)
+        .chain(std::io::stdout())
+        .chain(log_file)
+        .apply()?;
+
     match cli.cmd.clone() {
         // Init the repo
         SubCommand::Init { proj_name } => cli.handle_init(dir, proj_name)?,
         SubCommand::Build => cli.handle_build(config)?,
         SubCommand::Run => cli.handle_run(config)?,
+        SubCommand::ReadConfig => info!("{}", config.to_string()),
     }
 
     Ok(())
@@ -33,8 +62,9 @@ fn main() -> anyhow::Result<()> {
     version,
     about,
     long_about = r#"Starburst is a language that attempts to build off of Rust!
+
 Starburst will be able to interop with Rust code, being able to call Rust (and C) functions and code externally.
-To see (or aid!) in development, go to the github page: github.com/mewfinity06/starburst"#
+    To see (or aid!) in development, go to the github page: github.com/mewfinity06/starburst"#
 )]
 pub struct Cli {
     #[clap(subcommand)]
@@ -43,41 +73,71 @@ pub struct Cli {
 }
 
 impl Cli {
+    /// This function initializes a new starburst project
+    ///
     /// TODO:
     /// - Have an interactive session?
     ///     - Instead of providing dir, proj_name in command line, we should have a prompt and build the new project accordingly
     /// - Do not overwrite files if they already exist, just create missing files
+    /// - Tidy up code into smaller functions
     ///
-    /// This function initializes a new starburst project
     fn handle_init(&self, dir: &Path, proj_name: String) -> anyhow::Result<()> {
         // Check if the directory exists, if it doesn't, create it
-        if !dir.exists() {
-            fs::create_dir_all(dir)?;
-        }
+        fs::create_dir_all(dir)?;
 
-        println!("Creating new project : {}", proj_name);
+        info!("Creating new project         : {}", proj_name);
 
-        // Load the file paths (config, main respectively) and create them
+        // Load the file paths (config, main respectively)
         let config_file_path = dir.join(format!("{}.config", proj_name));
         let main_file_path = dir.join(format!("{}.star", proj_name));
 
-        let mut config_file = File::create(&config_file_path)?;
-        let mut main_file = File::create(&main_file_path)?;
+        // Create config file if it doesn't exist
+        if !config_file_path.exists() {
+            let mut config_file = File::create(&config_file_path)?;
+            let basic_config_file = Config::default().to_string();
+            config_file.write_all(basic_config_file.as_bytes())?;
+            info!(
+                "Created config               : {}",
+                config_file_path.display()
+            );
+        }
 
-        println!("Created config       : {}", config_file_path.display());
-        println!("Created main file    : {}", main_file_path.display());
+        // Create main file if it doesn't exist
+        if !main_file_path.exists() {
+            let mut main_file = File::create(&main_file_path)?;
+            let hello_world = language::get_hello_world();
+            main_file.write_all(hello_world.as_bytes())?;
+            info!(
+                "Created main file            : {}",
+                main_file_path.display()
+            );
+        }
 
         // Get the build directory and create it
         let build_dir = dir.join("build");
-        fs::create_dir_all(&build_dir)?;
+        if !build_dir.exists() {
+            fs::create_dir_all(&build_dir)?;
+        }
 
-        println!("Created build dir    : {}", build_dir.display());
+        info!("Created build dir            : {}", build_dir.display());
 
-        let basic_config_file = Config::default().to_string();
-        let hello_world = language::get_hello_world();
+        // .starburst files, such as project.lock, etc
+        let starburst_file_dir = dir.join(".starburst");
+        if !starburst_file_dir.exists() {
+            fs::create_dir_all(&starburst_file_dir)?;
+        }
 
-        config_file.write_all(basic_config_file.as_bytes())?;
-        main_file.write_all(hello_world.as_bytes())?;
+        // .lock file should always be rewritten
+        let starburst_lock_file = starburst_file_dir.join("starburst.lock");
+        let mut starburst_lock_file = File::create(&starburst_lock_file)?;
+        starburst_lock_file.write_all(b"last_time_write:\n")?;
+
+        info!(
+            "Created .starburst dir       : {}",
+            starburst_file_dir.display()
+        );
+
+        info!("Successfully created project : {}", proj_name);
 
         Ok(())
     }
@@ -107,4 +167,6 @@ pub enum SubCommand {
     /// Build and run the current project!
     /// Does not build if the executable is up-to-date
     Run,
+    /// Print the config to the console
+    ReadConfig,
 }

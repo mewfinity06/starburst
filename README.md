@@ -9,10 +9,12 @@ Starburst is a language that attempts to build off of Rust!
 ### Goals
 
 - [ ] Interop with Rust and C (using the `extern` directive)
+- [ ] Built-in formatter (like Golang)
 - [ ] Self hosting
 
 ### Todo
 
+- [ ] Amazing CLI 
 - [ ] Lexer
 - [ ] Parser
 - [ ] Codegen
@@ -20,7 +22,13 @@ Starburst is a language that attempts to build off of Rust!
 
 ### Working
 
+- Nothing yet!
+
 ## Contributing
+
+Anyone can contribute to this project! (And *please* do!) Any sort of help is greatly appreciated!
+
+Just submit a PR and I'll review it as soon as I can! If I think that it deserves integration... boom! You're in and your name will be on the contributes page!
 
 ## Examples (Very much subject to change!)
 

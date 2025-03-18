@@ -64,12 +64,12 @@ impl Config {
                                     x if x.is_empty()
                                         || x.contains([
                                             ' ', '"', '\'', '!', '@', '#', '$', '%', '^', '&', '*',
-                                            '+', '{', '}', '[', ']', '\\', '|', ';', ':', ',', '.',
-                                            '<', '>',
+                                            '+', '{', '}', '[', ']', '\\', '|', ';', ':', ',', '<',
+                                            '>',
                                         ]) =>
                                     {
                                         return Err(anyhow::anyhow!(
-                                            "Malformated output name : {}",
+                                            "Malformated output name : {:?}",
                                             name
                                         ));
                                     }
@@ -81,12 +81,12 @@ impl Config {
                                     x if x.is_empty()
                                         || x.contains([
                                             ' ', '"', '\'', '!', '@', '#', '$', '%', '^', '&', '*',
-                                            '+', '{', '}', '[', ']', '\\', '|', ';', ':', ',', '.',
-                                            '<', '>',
+                                            '+', '{', '}', '[', ']', '\\', '|', ';', ':', ',', '<',
+                                            '>',
                                         ]) =>
                                     {
                                         return Err(anyhow::anyhow!(
-                                            "Malformated input name : {}",
+                                            "Malformated input name : {:?}",
                                             name
                                         ));
                                     }

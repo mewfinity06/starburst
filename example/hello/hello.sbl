@@ -1,0 +1,6 @@
+// This is a comment test!
+use std::io::println; // This is a comment test!
+
+func main : {
+    println("Hello world!");
+}

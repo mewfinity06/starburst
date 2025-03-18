@@ -21,15 +21,17 @@ fn find_config_file(dir: &Path) -> Option<PathBuf> {
 #[derive(Debug)]
 #[allow(dead_code)]
 pub struct Config {
-    output_exe: String,
-    input_file: String,
-    debug: bool,
+    pub project_dir: String,
+    pub output_exe: String,
+    pub input_file: String,
+    pub debug: bool,
 }
 
 impl Config {
     pub fn new(dir: &Path) -> anyhow::Result<Self> {
         enum Mode {
             Bin,
+            Project,
             None,
         }
 
@@ -52,8 +54,10 @@ impl Config {
                 let mut splits = line.split([' ', '=']);
 
                 while let Some(word) = splits.next() {
-                    if word == "[bin]" {
-                        mode = Mode::Bin;
+                    match word {
+                        "[bin]" => mode = Mode::Bin,
+                        "[project]" => mode = Mode::Project,
+                        _ => {}
                     }
 
                     match mode {
@@ -101,9 +105,28 @@ impl Config {
                                 };
                             }
                         }
+                        Mode::Project => {
+                            if word == "project_dir" {
+                                let dir = splits.next().unwrap();
+                                config.project_dir = match dir {
+                                    x if !x.is_empty() => x.to_string(),
+                                    _ => {
+                                        return Err(anyhow::anyhow!(
+                                            "Malformatted dir : {:?}",
+                                            dir
+                                        ));
+                                    }
+                                }
+                            }
+                        }
                         Mode::None => {}
                     }
                 }
+            }
+
+            // if the project_dir is not set, it should be the path to the dir built
+            if config.project_dir.is_empty() {
+                config.project_dir = dir.to_string_lossy().to_string();
             }
 
             // Return the config
@@ -117,6 +140,9 @@ impl Config {
     pub fn to_string(&self) -> String {
         let mut res = String::new();
 
+        // Print all project options
+        res.push_str("[project]\n");
+        res.push_str(&format!("project_dir={}\n", self.project_dir));
         // Print all bin options
         res.push_str("[bin]\n");
         res.push_str(&format!("name={}\n", self.output_exe));
@@ -130,6 +156,7 @@ impl Config {
 impl Default for Config {
     fn default() -> Self {
         Self {
+            project_dir: String::new(),
             output_exe: String::from("/build/main"),
             input_file: String::from("main.sbl"),
             debug: false,

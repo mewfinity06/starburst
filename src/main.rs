@@ -14,6 +14,8 @@ pub mod config_parser;
 use config_parser::*;
 
 pub mod language;
+pub mod lexer;
+pub mod parser;
 
 fn main() -> anyhow::Result<()> {
     let cli = Cli::parse();
@@ -143,8 +145,12 @@ impl Cli {
     }
 
     /// This function builds the current starburst project
-    fn handle_build(&self, _config: Config) -> anyhow::Result<()> {
-        Err(anyhow::anyhow!("Not implemented"))
+    ///
+    /// TODO: Check if last copiletime is current.
+    /// Currently we always build and that is inefficient and makes the compiler slow and annoying to use.
+    /// handle_build is essentially a wraper for language::compile right now
+    fn handle_build(&self, config: Config) -> anyhow::Result<()> {
+        language::compile(config)
     }
 
     /// This fucntion builds (if the current build is not up-to-date) and runs it

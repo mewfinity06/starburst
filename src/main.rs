@@ -1,5 +1,6 @@
 use std::fs::{self, File};
 use std::io::Write;
+use std::path::Path;
 use std::path::PathBuf;
 
 use clap::*;
@@ -11,14 +12,15 @@ pub mod language;
 
 fn main() -> anyhow::Result<()> {
     let cli = Cli::parse();
-    println!("{:?}", cli);
+    // println!("{:?}", cli);
+    let dir = Path::new(&cli.dir);
 
-    let config = Config::new()?;
-    println!("{:?}", config);
+    let config = Config::new(dir)?;
+    // println!("{:?}", config);
 
     match cli.cmd.clone() {
         // Init the repo
-        SubCommand::Init { dir, proj_name } => cli.handle_init(dir, proj_name)?,
+        SubCommand::Init { proj_name } => cli.handle_init(dir, proj_name)?,
         SubCommand::Build => cli.handle_build(config)?,
         SubCommand::Run => cli.handle_run(config)?,
     }
@@ -37,6 +39,7 @@ To see (or aid!) in development, go to the github page: github.com/mewfinity06/s
 pub struct Cli {
     #[clap(subcommand)]
     cmd: SubCommand,
+    dir: PathBuf,
 }
 
 impl Cli {
@@ -46,17 +49,17 @@ impl Cli {
     /// - Do not overwrite files if they already exist, just create missing files
     ///
     /// This function initializes a new starburst project
-    fn handle_init(&self, dir: PathBuf, proj_name: String) -> anyhow::Result<()> {
+    fn handle_init(&self, dir: &Path, proj_name: String) -> anyhow::Result<()> {
         // Check if the directory exists, if it doesn't, create it
         if !dir.exists() {
-            fs::create_dir_all(&dir)?;
+            fs::create_dir_all(dir)?;
         }
 
         println!("Creating new project : {}", proj_name);
 
         // Load the file paths (config, main respectively) and create them
-        let config_file_path = dir.as_path().join(format!("{}.config", proj_name));
-        let main_file_path = dir.as_path().join(format!("{}.star", proj_name));
+        let config_file_path = dir.join(format!("{}.config", proj_name));
+        let main_file_path = dir.join(format!("{}.star", proj_name));
 
         let mut config_file = File::create(&config_file_path)?;
         let mut main_file = File::create(&main_file_path)?;
@@ -65,7 +68,7 @@ impl Cli {
         println!("Created main file    : {}", main_file_path.display());
 
         // Get the build directory and create it
-        let build_dir = dir.as_path().join("build");
+        let build_dir = dir.join("build");
         fs::create_dir_all(&build_dir)?;
 
         println!("Created build dir    : {}", build_dir.display());
@@ -94,8 +97,6 @@ impl Cli {
 pub enum SubCommand {
     /// Initialize a new Startburst Project!
     Init {
-        /// Directory in which the project will be made
-        dir: PathBuf,
         /// The name of your project!
         /// This will define your config name and the name of your final executable
         proj_name: String,

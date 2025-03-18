@@ -1,11 +1,11 @@
 use std::fs::{self, File};
 use std::io::{BufRead, BufReader};
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 const CONFIG_FILE_EXTENSION: &str = ".config";
 
-fn find_config_file() -> Option<PathBuf> {
-    let current_dir = std::env::current_dir().ok()?;
+fn find_config_file(dir: &Path) -> Option<PathBuf> {
+    let current_dir = dir;
     for entry in fs::read_dir(current_dir).ok()? {
         let entry = entry.ok()?; // Handle potential errors
         let path = entry.path();
@@ -26,13 +26,13 @@ pub struct Config {
 }
 
 impl Config {
-    pub fn new() -> anyhow::Result<Self> {
+    pub fn new(dir: &Path) -> anyhow::Result<Self> {
         enum Mode {
             Bin,
             None,
         }
 
-        if let Some(path) = find_config_file() {
+        if let Some(path) = find_config_file(dir) {
             let mut config = Self::default();
             // Read config file!
             let f = File::open(path)?;

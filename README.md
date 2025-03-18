@@ -157,11 +157,11 @@ use std::io::println;
 const Person <- struct {
   name         : string,
   age          : u8,
-  bank_ammount : u32,
+  bank_ammount : f32,
 }
 
 Person <- impl {
-  func new(name: string = "Unknown", age: u8 = 0, bank_ammount: u32 = 0) -> Self {
+  func new(name: string = "Unknown", age: u8 = 0, bank_ammount: f32 = 0) -> Self {
     Self {
       name, age, bank_ammount,
     }

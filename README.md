@@ -1,8 +1,16 @@
-# Starburst - A new language
+# Starburst - The Nova compiler
 
-Starburst is a language that attempts to build off of Rust!
+Nova is a language that attempts to build off of Rust!
 
 ## About
+
+### Inspiration
+
+* Rust - First and foremost, Rust is my favorite language. There are a LOT of similarities between Rust and Nova, mostly in syntax and semantics. Bit there are a lot of my own liberties in Nova
+
+### Notes and Thoughts
+
+* Maybe we should just compile down to C doe and then call a C compiler? Maybe down to C++? I don't want to transpile to Rust because I don't want to deal with the borrow checker (he's a bitch!) if only we could turn it off...
 
 ## Development
 
@@ -15,10 +23,10 @@ Starburst is a language that attempts to build off of Rust!
 ### Todo
 
 - [ ] Amazing CLI 
-- [ ] Lexer
+- [X] Lexer
 - [ ] Parser
 - [ ] Codegen
-- [ ] Create our own backend (possibly LLVM but LLVM is slow)
+- [ ] Create our own backend (possibly [LLVM](https://llvm.org/) but LLVM is slow. Maybe [QBE](https://c9x.me/compile/doc/llvm.html)?)
 
 ### Working
 

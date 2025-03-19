@@ -3,6 +3,7 @@ use std::io::{BufRead, BufReader, Read};
 use std::path::Path;
 
 use anyhow::Context;
+use anyhow::anyhow;
 
 use crate::config_parser::Config;
 use crate::lexer::*;
@@ -33,7 +34,7 @@ pub fn compile(config: Config) -> anyhow::Result<()> {
 
 fn read_file_to_lines(path: &str, config: &Config) -> anyhow::Result<Vec<String>> {
     let mut buffer: Vec<String> = vec![];
-    let full_file_path: String = format!("{}{}", config.project_dir, path);
+    let full_file_path: String = format!("{}/{}", config.project_dir, path);
     let file = File::open(full_file_path.clone())
         .context(format!("file being read: {}", full_file_path))?;
     let reader = BufReader::new(file);

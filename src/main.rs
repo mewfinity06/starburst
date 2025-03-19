@@ -5,6 +5,7 @@ use std::io::Write;
 use std::path::Path;
 use std::path::PathBuf;
 
+use anyhow::anyhow;
 use chrono::Local;
 use clap::*;
 use fern::Dispatch;
@@ -26,7 +27,7 @@ fn main() -> anyhow::Result<()> {
     // println!("{:?}", config);
 
     // Set up fern for logging
-    let log_file = OpenOptions::new()
+    let _log_file = OpenOptions::new()
         .create(true)
         .append(true)
         .open("starburst.log")?;
@@ -36,16 +37,15 @@ fn main() -> anyhow::Result<()> {
             let now = Local::now();
 
             out.finish(format_args!(
-                "[{}] [{}] {}: {}",
+                "[{}] [{}]: {}",
                 now.format("%Y-%m-%d %H:%M:%S"),
                 record.level(),
-                record.target(),
                 message
             ))
         })
         .level(log::LevelFilter::Info)
         .chain(std::io::stdout())
-        .chain(log_file)
+        // .chain(_log_file)
         .apply()?;
 
     match cli.cmd.clone() {
@@ -53,7 +53,7 @@ fn main() -> anyhow::Result<()> {
         SubCommand::Init { proj_name } => cli.handle_init(dir, proj_name)?,
         SubCommand::Build => cli.handle_build(config)?,
         SubCommand::Run => cli.handle_run(config)?,
-        SubCommand::ReadConfig => info!("{}", config.to_string()),
+        SubCommand::ReadConfig => println!("{}", config.to_string()),
     }
 
     Ok(())
@@ -84,6 +84,16 @@ impl Cli {
     /// - Tidy up code into smaller functions
     ///
     fn handle_init(&self, dir: &Path, proj_name: String) -> anyhow::Result<()> {
+        let dir = if dir.is_absolute() {
+            dir.to_path_buf()
+        } else {
+            std::env::current_dir()?.join(dir)
+        }
+        .as_path()
+        .canonicalize()?;
+
+        let dir = dir.as_path();
+
         // Check if the directory exists, if it doesn't, create it
         fs::create_dir_all(dir)?;
 
@@ -91,12 +101,12 @@ impl Cli {
 
         // Load the file paths (config, main respectively)
         let config_file_path = dir.join(format!("{}.config", proj_name));
-        let main_file_path = dir.join(format!("{}.star", proj_name));
+        let main_file_path = dir.join("main.nova");
 
         // Create config file if it doesn't exist
         if !config_file_path.exists() {
             let mut config_file = File::create(&config_file_path)?;
-            let basic_config_file = Config::default().to_string();
+            let basic_config_file = Config::get_basic(dir).to_string();
             config_file.write_all(basic_config_file.as_bytes())?;
             info!(
                 "Created config               : {}",
@@ -130,7 +140,7 @@ impl Cli {
         }
 
         // .lock file should always be rewritten
-        let starburst_lock_file = starburst_file_dir.join("starburst.lock");
+        let starburst_lock_file = starburst_file_dir.join("project.lock");
         let mut starburst_lock_file = File::create(&starburst_lock_file)?;
         starburst_lock_file.write_all(b"last_time_write:\n")?;
 
@@ -155,7 +165,7 @@ impl Cli {
 
     /// This fucntion builds (if the current build is not up-to-date) and runs it
     fn handle_run(&self, _config: Config) -> anyhow::Result<()> {
-        Err(anyhow::anyhow!("Not implemented"))
+        Err(anyhow!("Not implemented"))
     }
 }
 

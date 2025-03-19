@@ -151,14 +151,23 @@ impl Config {
 
         res
     }
+
+    pub fn get_basic(dir: &Path) -> Self {
+        Self {
+            project_dir: dir.to_string_lossy().to_string(),
+            output_exe: String::from("/build/main"),
+            input_file: String::from("main.nova"),
+            debug: false,
+        }
+    }
 }
 
 impl Default for Config {
     fn default() -> Self {
         Self {
-            project_dir: String::new(),
+            project_dir: String::from("."),
             output_exe: String::from("/build/main"),
-            input_file: String::from("main.sbl"),
+            input_file: String::from("main.nova"),
             debug: false,
         }
     }

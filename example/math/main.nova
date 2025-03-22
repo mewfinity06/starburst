@@ -1,0 +1,40 @@
+use std::io::println;
+
+use extern::c::c_math;             // Get cmath.h
+use c_math::sin_f as sin;          // set sin_f to sin
+use c_math::cos_f as cos;          // set cos_f to cos
+use c_math::tan_f as tan;          // set tan_f to tan
+use c_math::square_root_f as sqrt; // set square_root_f to sqrt
+
+func main : {
+    // Sin, cos of 1.0
+    let x = sin(1.0);
+    let y = cos(1.0);
+    
+    // Tan of square root of 2 over 2
+    let z = tan(sqrt(2.0) / 2.0);
+
+    println("sin(1.0) = {}", .{x});
+    println("cos(1.0) = {}", .{y});
+    println("tan(sqrt(2.0) / 2.0) = {}", .{z});
+
+    let res = {
+      // ( ( 2 / 3 ) * 4) + 1
+      1 + 2 / 3 * 4
+    }
+
+    println("1 + 2 / 3 * 4 = {}", .{res});
+    
+    // 2 to the power of 3 (8)
+    let pow = 2^^3;
+
+    println("2^^3 = {}", .{pow});
+
+    // Let's explain this syntax
+    // Since `!` usually cannot be a function call, we 'alias' it with `@`
+    // Yes, this is *slightly* stolen from Zig, but I call it innovation!
+    let factorial = 8@!();
+
+    println("8! = {}", .{factorial});
+    
+}

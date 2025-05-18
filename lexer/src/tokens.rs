@@ -18,6 +18,8 @@ pub enum TokenKind {
     AssignmentMinus, // |-
     AssignmentStar,  // |*
     AssignmentDiv,   // |/
+    AssignmentOr,    // ||
+    AssignmentAnd,   // |&
     LParen,          // (
     RParen,          // )
     LBrace,          // {
@@ -28,6 +30,8 @@ pub enum TokenKind {
     Semicolon,       // ;
     Equal,           // =
     Pound,           // #
+    LBrack,          // [
+    RBrack,          // ]
 
     // operators:
     Bang,               // !
@@ -35,7 +39,7 @@ pub enum TokenKind {
     Minus,              // -
     Slash,              // /
     Star,               // *
-    Ampersand,                // &
+    Ampersand,          // &
     Pipe,               // |
     Carrot,             // ^
     DoubleEqual,        // ==
@@ -44,6 +48,8 @@ pub enum TokenKind {
     GreaterThan,        // >
     LessThanOrEqual,    // <=
     GreaterThanOrEqual, // >=
+    RArrow,             // ->
+    LArrow,             // <-
 
     // idents
     Identifier,  // variable names
@@ -75,8 +81,14 @@ impl Display for TokenKind {
             TokenKind::AssignmentMinus => "|-",
             TokenKind::AssignmentStar => "|*",
             TokenKind::AssignmentDiv => "|/",
+            TokenKind::AssignmentOr => "||",
+            TokenKind::AssignmentAnd => "|&",
             TokenKind::LParen => "(",
             TokenKind::RParen => ")",
+            TokenKind::LBrack => "[",
+            TokenKind::RBrack => "]",
+            TokenKind::RArrow => "->",
+            TokenKind::LArrow => "<-",
             TokenKind::LBrace => "{",
             TokenKind::RBrace => "}",
             TokenKind::Colon => ":",

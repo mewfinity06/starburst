@@ -6,6 +6,9 @@ use tokens::{Token, TokenKind};
 
 pub mod tokens;
 
+#[cfg(test)]
+mod tests;
+
 #[derive(Clone)]
 pub struct Lexer<'src> {
     pub content: &'src str,
@@ -20,7 +23,7 @@ impl<'src> Lexer<'src> {
         }
     }
 
-    fn next_token(&mut self) -> Token {
+    pub fn next_token(&mut self) -> Token {
         use tokens::TokenKind::*;
 
         self.skip_whitespace();
@@ -30,28 +33,24 @@ impl<'src> Lexer<'src> {
         };
 
         match cur_char {
+            '[' => self.make_single_char_token(cur_index, LBrack),
+            ']' => self.make_single_char_token(cur_index, RBrack),
             '#' => self.make_single_char_token(cur_index, Pound),
             '+' => self.make_single_char_token(cur_index, Plus),
             '-' => {
                 self.next();
-                if self
-                    .chars
-                    .next_if(|(_, next_char)| *next_char == '#')
-                    .is_some()
-                {
+                if self.expect_char('>') {
+                    Token::new(RArrow, cur_index, 2)
+                } else if self.expect_char('#') {
                     // skip '#'
-                    let (cur_index, _) = self.next().unwrap(); 
+                    let (cur_index, _) = self.next().unwrap();
                     let size = self.read_comment(cur_index);
                     Token::new(DocComment, cur_index, size)
-                } else if self
-                    .chars
-                    .next_if(|(_, next_char)| *next_char == '-')
-                    .is_some()
-                {
+                } else if self.expect_char('-') {
                     // skip '-'
                     let (cur_index, _) = self.next().unwrap();
                     let size = self.read_comment(cur_index);
-                    Token::new(Comment, cur_indx, size) 
+                    Token::new(Comment, cur_index, size)
                 } else {
                     self.make_single_char_token(cur_index, Minus)
                 }
@@ -61,12 +60,20 @@ impl<'src> Lexer<'src> {
             '&' => self.make_single_char_token(cur_index, And),
             '|' => {
                 self.next();
-                if self
-                    .chars
-                    .next_if(|(_, next_char)| *next_char == ':')
-                    .is_some()
-                {
+                if self.expect_char(':') {
                     Token::new(Assignment, cur_index, 2)
+                } else if self.expect_char('+') {
+                    Token::new(AssignmentPlus, cur_index, 2)
+                } else if self.expect_char('-') {
+                    Token::new(AssignmentMinus, cur_index, 2)
+                } else if self.expect_char('*') {
+                    Token::new(AssignmentStar, cur_index, 2)
+                } else if self.expect_char('/') {
+                    Token::new(AssignmentDiv, cur_index, 2)
+                } else if self.expect_char('|') {
+                    Token::new(AssignmentOr, cur_index, 2)
+                } else if self.expect_char('&') {
+                    Token::new(AssignmentAnd, cur_index, 2)
                 } else {
                     Token::new(Pipe, cur_index, 2)
                 }
@@ -74,11 +81,7 @@ impl<'src> Lexer<'src> {
             '^' => self.make_single_char_token(cur_index, Carrot),
             '=' => {
                 self.next();
-                if self
-                    .chars
-                    .next_if(|(_, next_char)| *next_char == '=')
-                    .is_some()
-                {
+                if self.expect_char('=') {
                     Token::new(DoubleEqual, cur_index, 2)
                 } else {
                     Token::new(Equal, cur_index, 1)
@@ -86,11 +89,7 @@ impl<'src> Lexer<'src> {
             }
             '!' => {
                 self.next();
-                if self
-                    .chars
-                    .next_if(|(_, next_char)| *next_char == '=')
-                    .is_some()
-                {
+                if self.expect_char('=') {
                     Token::new(NotEqual, cur_index, 2)
                 } else {
                     Token::new(Bang, cur_index, 1)
@@ -99,6 +98,12 @@ impl<'src> Lexer<'src> {
             '<' => {
                 self.next();
                 if self
+                    .chars
+                    .next_if(|(_, next_char)| *next_char == '-')
+                    .is_some()
+                {
+                    Token::new(LArrow, cur_index, 2)
+                } else if self
                     .chars
                     .next_if(|(_, next_char)| *next_char == '=')
                     .is_some()
@@ -150,6 +155,12 @@ impl<'src> Lexer<'src> {
             }
             c => panic!("illegal token: {c}"),
         }
+    }
+
+    fn expect_char(&mut self, c: char) -> bool {
+        self.chars
+            .next_if(|(_, next_char)| *next_char == c)
+            .is_some()
     }
 
     fn peek(&mut self) -> Option<(usize, char)> {

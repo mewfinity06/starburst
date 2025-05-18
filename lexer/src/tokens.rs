@@ -1,0 +1,128 @@
+use std::fmt::Display;
+
+use span::Span;
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum TokenKind {
+    // keywords
+    Mut,   // mut
+    Val,   // val
+    Const, // const
+    Func,  // func
+    Or,    // or
+    And,   // and
+
+    // syntax
+    Assignment,      // |:
+    AssignmentPlus,  // |+
+    AssignmentMinus, // |-
+    AssignmentStar,  // |*
+    AssignmentDiv,   // |/
+    LParen,          // (
+    RParen,          // )
+    LBrace,          // {
+    RBrace,          // }
+    Colon,           // :
+    Comma,           // ,
+    Tilde,           // ~
+    Semicolon,       // ;
+    Equal,           // =
+    Pound,           // #
+
+    // operators:
+    Bang,               // !
+    Plus,               // +
+    Minus,              // -
+    Slash,              // /
+    Star,               // *
+    Ampersand,                // &
+    Pipe,               // |
+    Carrot,             // ^
+    DoubleEqual,        // ==
+    NotEqual,           // !=
+    LessThan,           // <
+    GreaterThan,        // >
+    LessThanOrEqual,    // <=
+    GreaterThanOrEqual, // >=
+
+    // idents
+    Identifier,  // variable names
+    BuiltinType, // type names
+
+    // literals
+    StringLiteral, // string literal
+    CharLiteral,   // char literal
+    IntLiteral,    // int literal
+
+    // comments
+    Comment,
+    DocComment, // doc comments
+
+    Eof,
+}
+
+impl Display for TokenKind {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let str = match self {
+            TokenKind::Mut => "mut",
+            TokenKind::Val => "val",
+            TokenKind::Const => "const",
+            TokenKind::Func => "func",
+            TokenKind::Or => "or",
+            TokenKind::And => "and",
+            TokenKind::Assignment => "|:",
+            TokenKind::AssignmentPlus => "|+",
+            TokenKind::AssignmentMinus => "|-",
+            TokenKind::AssignmentStar => "|*",
+            TokenKind::AssignmentDiv => "|/",
+            TokenKind::LParen => "(",
+            TokenKind::RParen => ")",
+            TokenKind::LBrace => "{",
+            TokenKind::RBrace => "}",
+            TokenKind::Colon => ":",
+            TokenKind::Comma => ",",
+            TokenKind::Tilde => "~",
+            TokenKind::Semicolon => ";",
+            TokenKind::Equal => "=",
+            TokenKind::Bang => "!",
+            TokenKind::Plus => "+",
+            TokenKind::Minus => "-",
+            TokenKind::Slash => "/",
+            TokenKind::Pound => "#",
+            TokenKind::Star => "*",
+            TokenKind::Ampersand => "&",
+            TokenKind::Pipe => "|",
+            TokenKind::Carrot => "^",
+            TokenKind::DoubleEqual => "=",
+            TokenKind::NotEqual => "!=",
+            TokenKind::LessThan => "<",
+            TokenKind::GreaterThan => ">",
+            TokenKind::LessThanOrEqual => "<=",
+            TokenKind::GreaterThanOrEqual => ">=",
+            TokenKind::Identifier => "identifier",
+            TokenKind::IntLiteral => "integer literal",
+            TokenKind::StringLiteral => "string literal",
+            TokenKind::CharLiteral => "char literal",
+            TokenKind::BuiltinType => "builtin type",
+            TokenKind::Comment => "comment",
+            TokenKind::DocComment => "doc comment",
+            TokenKind::Eof => "EOF",
+        };
+        f.write_str(str)
+    }
+}
+
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct Token {
+    pub kind: TokenKind,
+    pub span: Span,
+}
+
+impl Token {
+    pub fn new(kind: TokenKind, start: usize, size: usize) -> Self {
+        Token {
+            kind,
+            span: Span::from_range(start, start + size),
+        }
+    }
+}

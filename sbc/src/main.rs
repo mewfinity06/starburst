@@ -1,20 +1,34 @@
 use lexer::Lexer;
+use lexer::tokens::TokenKind::*;
 
 fn main() {
-    let content = r#"--Comment test
-mut foo |: 4 --after line comment test
-val bar |: 8
-const BAZ | Int : foo + bar
+    let content = r#"--functions
+const add | func [a: Int, b: Int] -> Int : {
+    a + b
+}
 
--#Doc comment test!
+const sub | func [a, b: Int] -> Int : a - b;
+
+val v1 |: add[a: 2, b: 8]
+val v2 |: sub[3, 6]
         "#;
     let lexer = Lexer::new(content);
 
+    println!("{}", content);
+
+    let mut counter: usize = 0;
     for token in lexer {
-        println!(
-            "{:?} -> {}",
-            token.kind,
-            &content[token.span.start..token.span.end]
-        );
+        if counter % 3 == 0 {
+            println!();
+        }
+        match token.kind {
+            DocComment | Comment => continue,
+            Identifier | BuiltinType | StringLiteral | CharLiteral | IntLiteral => {
+                print!("'{}' ", &content[token.span.start..token.span.end])
+            }
+            _ => print!("{:?} ", token.kind),
+        }
+        counter += 1;
     }
+    println!();
 }

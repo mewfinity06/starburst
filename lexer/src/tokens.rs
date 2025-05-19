@@ -33,6 +33,7 @@ pub enum TokenKind {
     Pound,           // #
     LBrack,          // [
     RBrack,          // ]
+    Variadic,        // ...
 
     // operators:
     Bang,               // !
@@ -51,6 +52,7 @@ pub enum TokenKind {
     GreaterThanOrEqual, // >=
     RArrow,             // ->
     LArrow,             // <-
+    Dot,                // .
 
     // idents
     Identifier,  // variable names
@@ -60,7 +62,7 @@ pub enum TokenKind {
     StringLiteral, // string literal
     CharLiteral,   // char literal
     IntLiteral,    // int literal
-    
+
     // comments
     Comment,
     DocComment, // doc comments
@@ -85,6 +87,8 @@ impl Display for TokenKind {
             TokenKind::AssignmentDiv => "|/",
             TokenKind::AssignmentOr => "||",
             TokenKind::AssignmentAnd => "|&",
+            TokenKind::Variadic => "...",
+            TokenKind::Dot => ".",
             TokenKind::LParen => "(",
             TokenKind::RParen => ")",
             TokenKind::LBrack => "[",

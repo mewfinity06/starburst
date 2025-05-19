@@ -33,13 +33,21 @@ impl<'src> Lexer<'src> {
         };
 
         match cur_char {
+            '.' => {
+                self.next();
+                if self.expect_char('.') && self.expect_char('.') {
+                    Token::new(Variadic, cur_index, 3)
+                } else {
+                    self.make_single_char_token(cur_index, Dot)
+                }
+            }
             '"' => {
                 // skip first `"`
                 self.next();
                 let size = self.read_string(cur_index).len();
                 // skip second `"`
                 self.next();
-                Token::new(StringLiteral, cur_index, size+1)
+                Token::new(StringLiteral, cur_index, size + 1)
             }
             '[' => self.make_single_char_token(cur_index, LBrack),
             ']' => self.make_single_char_token(cur_index, RBrack),
@@ -200,14 +208,11 @@ impl<'src> Lexer<'src> {
     // TODO: Add proper escaping!!
     fn read_string(&mut self, position: usize) -> &'src str {
         let mut last = position;
-        while self
-            .peek()
-            .is_some_and(|(_, c)| c != '"')
-        {
+        while self.peek().is_some_and(|(_, c)| c != '"') {
             let (l, _) = self.next().unwrap();
             last = l;
         }
-        &self.content[position..last+1]
+        &self.content[position..last + 1]
     }
 
     fn read_int(&mut self, position: usize) -> usize {

@@ -1,0 +1,7 @@
+extern("C") {
+    printf[*const Char, ...],
+} 
+
+const main | func[] : {
+    printf["Hello world!"]
+}

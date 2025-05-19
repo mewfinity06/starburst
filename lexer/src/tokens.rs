@@ -5,12 +5,13 @@ use span::Span;
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum TokenKind {
     // keywords
-    Mut,   // mut
-    Val,   // val
-    Const, // const
-    Func,  // func
-    Or,    // or
-    And,   // and
+    Mut,    // mut
+    Val,    // val
+    Const,  // const
+    Func,   // func
+    Or,     // or
+    And,    // and
+    Extern, // extern
 
     // syntax
     Assignment,      // |:
@@ -59,7 +60,7 @@ pub enum TokenKind {
     StringLiteral, // string literal
     CharLiteral,   // char literal
     IntLiteral,    // int literal
-
+    
     // comments
     Comment,
     DocComment, // doc comments
@@ -76,6 +77,7 @@ impl Display for TokenKind {
             TokenKind::Func => "func",
             TokenKind::Or => "or",
             TokenKind::And => "and",
+            TokenKind::Extern => "extern",
             TokenKind::Assignment => "|:",
             TokenKind::AssignmentPlus => "|+",
             TokenKind::AssignmentMinus => "|-",

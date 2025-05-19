@@ -50,11 +50,11 @@ fn main() -> Result<(), &'static str> {
                     Comment | DocComment => continue,
                     Identifier | BuiltinType | StringLiteral | CharLiteral | IntLiteral => {
                         println!("'{}' ", &content[token.span.start..token.span.end])
-                    },
+                    }
                     _ => println!("{:?} ", token.kind),
                 }
             }
-        },
+        }
         Command::Build => todo!(),
         Command::BuildRun => todo!(),
         Command::Run => todo!(),
@@ -68,7 +68,9 @@ fn read_entire_file_buffered(path: &str) -> String {
     let file = File::open(path).expect("Failed to open file");
     let mut reader = BufReader::new(file);
     let mut contents = String::new();
-    reader.read_to_string(&mut contents).expect("Failed to read file");
+    reader
+        .read_to_string(&mut contents)
+        .expect("Failed to read file");
     contents
 }
 

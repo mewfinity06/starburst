@@ -157,6 +157,7 @@ impl<'src> Lexer<'src> {
                     "val" => Token::new(Val, cur_index, 4),
                     "const" => Token::new(Const, cur_index, 5),
                     "func" => Token::new(Func, cur_index, 4),
+                    "extern" => Token::new(Extern, cur_index, 6),
                     // builtin types
                     "Int" => Token::new(BuiltinType, cur_index, 3),
                     "Char" => Token::new(BuiltinType, cur_index, 4),

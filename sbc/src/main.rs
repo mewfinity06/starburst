@@ -1,9 +1,13 @@
+// Rust
 use std::fs::File;
 use std::io::{BufReader, Read};
 
-use lexer::Lexer;
+// Vendor
+use clap::{Parser as ClapParser, Subcommand};
 
-use clap::{Parser, Subcommand};
+// Starburst
+use lexer::Lexer;
+use parser::Parser;
 
 #[derive(Subcommand, Debug)]
 enum Command {
@@ -23,7 +27,7 @@ enum Command {
     Docs,
 }
 
-#[derive(Parser, Debug)]
+#[derive(ClapParser, Debug)]
 struct Cli {
     #[command(subcommand)]
     cmd: Command,
@@ -37,23 +41,15 @@ fn main() -> Result<(), &'static str> {
     let content = read_entire_file_buffered(&cli.path);
 
     let lex = Lexer::new(&content);
+    let parser = Parser::new(lex);
 
     match &cli.cmd {
         Command::IR => {
-            use lexer::tokens::TokenKind::*;
+            println!("{}", content);
 
-            println!("{}\n\n", content);
+            let parsed: Vec<_> = parser.collect();
 
-            for (i, token) in lex.enumerate() {
-                print!("{}: ", i);
-                match token.kind {
-                    Comment | DocComment => continue,
-                    Identifier | BuiltinType | StringLiteral | CharLiteral | IntLiteral => {
-                        println!("'{}' ", &content[token.span.start..token.span.end])
-                    }
-                    _ => println!("{:?} ", token.kind),
-                }
-            }
+            dbg!(parsed);
         }
         Command::Build => todo!(),
         Command::BuildRun => todo!(),

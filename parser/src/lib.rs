@@ -1,14 +1,77 @@
-pub fn add(left: u64, right: u64) -> u64 {
-    left + right
+#![allow(dead_code)]
+use std::{iter::Peekable, vec::IntoIter};
+
+use ast::*;
+use lexer::{
+    Lexer,
+    tokens::{Token, TokenKind},
+};
+use parser_error::*;
+
+mod ast;
+mod parser_error;
+
+pub struct Parser<'p> {
+    content: &'p str,
+    tokens: Peekable<IntoIter<Token>>,
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
+impl<'p> Parser<'p> {
+    pub fn new(lexer: Lexer<'p>) -> Self {
+        Self {
+            content: lexer.content,
+            tokens: lexer.collect::<Vec<_>>().into_iter().peekable(),
+        }
+    }
 
-    #[test]
-    fn it_works() {
-        let result = add(2, 2);
-        assert_eq!(result, 4);
+    fn next_node(&mut self) -> Result<Node, ParserError> {
+        let Some(cur_token) = self.next() else {
+            return Err(ParserError::Eof);
+        };
+
+        match cur_token.kind {
+            TokenKind::Comment | TokenKind::DocComment => Ok(Node::Comment),
+            // Variable decls
+            TokenKind::Mut => Ok(Node::Expr(Expr::VariableDecl(VariableDecl::parse_mut(
+                self,
+            )?))),
+            TokenKind::Val => Ok(Node::Expr(Expr::VariableDecl(VariableDecl::parse_val(
+                self,
+            )?))),
+            TokenKind::Const => Ok(Node::Expr(Expr::VariableDecl(VariableDecl::parse_const(
+                self,
+            )?))),
+            _ => return Err(ParserError::UnknownToken { token: cur_token }),
+        }
+    }
+
+    fn next(&mut self) -> Option<Token> {
+        self.tokens.next()
+    }
+
+    fn expect_token(&mut self, tk: TokenKind) -> bool {
+        self.peek().is_some_and(|t| t.kind == tk)
+    }
+
+    fn peek(&mut self) -> Option<Token> {
+        self.tokens.peek().copied()
+    }
+}
+
+impl<'p> Iterator for Parser<'p> {
+    type Item = Node;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        match self.next_node() {
+            Ok(x) => Some(x),
+            Err(x) if x == ParserError::Eof => None,
+            Err(x) => {
+                eprintln!("Error: {}", x);
+                if let Some(span) = x.get_span() {
+                    eprintln!("     | @ `{}`", &self.content[span.start..span.end])
+                }
+                None
+            }
+        }
     }
 }

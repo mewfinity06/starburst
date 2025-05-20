@@ -91,7 +91,7 @@ impl<'src> Lexer<'src> {
                 } else if self.expect_char('&') {
                     Token::new(AssignmentAnd, cur_index, 2)
                 } else {
-                    Token::new(Pipe, cur_index, 2)
+                    Token::new(Pipe, cur_index, 1)
                 }
             }
             '^' => self.make_single_char_token(cur_index, Carrot),

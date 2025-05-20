@@ -2,7 +2,7 @@ use std::fmt::Display;
 
 use span::Span;
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub enum TokenKind {
     // keywords
     Mut,    // mut
@@ -130,7 +130,7 @@ impl Display for TokenKind {
     }
 }
 
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq, PartialOrd, Ord)]
 pub struct Token {
     pub kind: TokenKind,
     pub span: Span,
@@ -143,4 +143,17 @@ impl Token {
             span: Span::from_range(start, start + size),
         }
     }
+
+    pub fn precedence(&self) -> Precedence {
+        use TokenKind::*;
+        match self.kind {
+            Plus | Minus => (1.0, 1.1),
+            Star | Slash => (2.0, 2.1),
+            Carrot => (3.1, 3.0),
+            Dot => (4.0, 4.1),
+            _ => (0.0, 0.0),
+        }
+    }
 }
+
+type Precedence = (f32, f32);

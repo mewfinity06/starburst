@@ -160,10 +160,10 @@ impl VariableDecl {
 
 #[derive(Debug, Clone, Eq, PartialEq, PartialOrd, Ord)]
 pub struct VariableDeclBody {
-    name: Span,
-    expl_type: Option<Box<Expr>>,
-    expl_type_span: Option<Span>,
-    expr: Box<Expr>,
+    pub name: Span,
+    pub expl_type: Option<Box<Expr>>,
+    pub expl_type_span: Option<Span>,
+    pub expr: Box<Expr>,
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, PartialOrd, Ord)]
@@ -181,13 +181,13 @@ pub enum Literal {
 
 #[derive(Debug, Clone, Eq, PartialEq, PartialOrd, Ord)]
 pub struct BinaryOp {
-    operand: Token,
-    rhs: Box<Expr>,
-    lhs: Box<Expr>,
+    pub operand: Token,
+    pub rhs: Box<Expr>,
+    pub lhs: Box<Expr>,
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, PartialOrd, Ord)]
 pub struct UnaryOp {
-    operand: Token,
-    rhs: Box<Expr>,
+    pub operand: Token,
+    pub rhs: Box<Expr>,
 }

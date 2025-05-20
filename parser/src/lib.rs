@@ -18,6 +18,9 @@ use parser_error::*;
 mod ast;
 mod parser_error;
 
+#[cfg(test)]
+mod tests;
+
 pub struct Parser<'p> {
     content: &'p str,
     tokens: Peekable<IntoIter<Token>>,

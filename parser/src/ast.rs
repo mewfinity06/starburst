@@ -1,8 +1,13 @@
-use span::Span;
+// Rust
 
+// Vendor
+
+// Starburst
+use span::Span;
 use lexer::tokens::Token;
 use lexer::tokens::TokenKind as TK;
 
+// Crate
 use crate::{Parser, parser_error::ParserError};
 
 #[derive(Debug, Clone, Eq, PartialEq, PartialOrd, Ord)]

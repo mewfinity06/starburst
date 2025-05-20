@@ -1,9 +1,16 @@
+// Top level file attributes
 #![allow(dead_code)]
+
+// Rust
 use std::iter::Peekable;
 use std::str::CharIndices;
 
+// Vendor
+
+// Starburst
 use tokens::{Token, TokenKind};
 
+// Mod
 pub mod tokens;
 
 #[cfg(test)]

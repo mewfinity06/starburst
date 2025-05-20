@@ -1,6 +1,12 @@
+// Top level file attribues
 #![allow(dead_code)]
+
+// Rust
 use std::{iter::Peekable, vec::IntoIter};
 
+// Vendor
+
+// Starburst
 use ast::*;
 use lexer::{
     Lexer,
@@ -8,6 +14,7 @@ use lexer::{
 };
 use parser_error::*;
 
+// Mod
 mod ast;
 mod parser_error;
 

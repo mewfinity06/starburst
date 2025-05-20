@@ -3,9 +3,9 @@
 // Vendor
 
 // Starburst
-use span::Span;
 use lexer::tokens::Token;
 use lexer::tokens::TokenKind as TK;
+use span::Span;
 
 // Crate
 use crate::{Parser, parser_error::ParserError};

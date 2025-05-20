@@ -1,5 +1,5 @@
 extern("C") {
-    printf[*const Char, ...],
+    printf[*const Char, ...] -> Int,
 } 
 
 const main | func[] : {

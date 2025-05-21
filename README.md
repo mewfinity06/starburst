@@ -1,5 +1,7 @@
 # Starburst - A compiler for Nova
 
+[image](./images/icon.svg)
+
 ## Goals
 
 ## Syntax

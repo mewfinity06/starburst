@@ -1,9 +1,8 @@
 #![allow(unused_assignments)]
 // Rust
+use std::mem::zeroed;
 
 // Vendor
-
-use std::mem::zeroed;
 
 // Starburst
 use lexer::tokens::Token;
@@ -21,7 +20,7 @@ macro_rules! expect_and_consume {
     ($parser:ident; $({$tk:expr, | $x:ident | $action:block})*) => {
         match $parser.next() {
             $( Some(val) if val.kind == $tk => {
-                $x = val;
+                let $x = val;
                 $action
             }, )*
             Some(generic) => {
@@ -36,11 +35,11 @@ macro_rules! expect_and_consume {
     ($parser:ident; $({$tk:expr, | $x:ident | $action:block})*; or | $or_x:ident | $else_branch:block) => {
         match $parser.next() {
             $( Some(val) if val.kind == $tk => {
-                $x = val;
+                let $x = val;
                 $action
             }, )*
             Some(val) => {
-                $or_x = val;
+                let $or_x = val;
                 $else_branch
             }
             None => return Err(ParserError::Eof),
@@ -67,7 +66,6 @@ pub enum Expr {
 
 impl Expr {
     pub fn parse_expr(parser: &mut Parser, min_bp: f32) -> Result<(Self, Span), ParserError> {
-        let mut x: Token = unsafe { zeroed() };
         let mut res_span = Span::from_range(0, 0);
 
         let mut lhs = expect_and_consume!(parser;
@@ -109,7 +107,6 @@ impl VariableDecl {
     fn parse_variable_decl_body(
         parser: &mut Parser,
     ) -> Result<(VariableDeclBody, Span), ParserError> {
-        let mut x: Token = unsafe { zeroed() };
         let mut res_span = Span::from_range(0, 0);
 
         // get name
@@ -255,8 +252,6 @@ pub struct Arg {
 
 impl ArgBody {
     pub fn parse_arg_body(parser: &mut Parser) -> Result<(Self, Span), ParserError> {
-        let mut x: Token = unsafe { zeroed() };
-
         let mut res_span: Span = Span::from_range(0, 0);
 
         // consume LBrace
@@ -307,8 +302,6 @@ pub struct FuncBody {
 
 impl FuncBody {
     pub fn parse_func_body(parser: &mut Parser) -> Result<(Self, Span), ParserError> {
-        let mut x: Token = unsafe { zeroed() };
-
         let (res, res_span) = expect_and_consume!(parser;
             { TK::LBrace, |x| {
                  todo!()
@@ -337,8 +330,6 @@ pub enum ReturnType {
 
 impl ReturnType {
     pub fn parse_return_type(parser: &mut Parser) -> Result<Self, ParserError> {
-        let mut x: Token = unsafe { zeroed() };
-
         // skip arrow
         expect_and_consume!(parser;
             { TK::RArrow, |x| {} }
@@ -346,8 +337,8 @@ impl ReturnType {
 
         expect_and_consume!(parser;
             { TK::Identifier, |x| { Ok(Self::Identifier(Identifier::Identifier(x.span))) } }
-            { TK::BuiltinType, |x| { Ok(Self::BuiltinType(Identifier::BuilinTypeName(x.span))) } }
-            or |x| { Ok(Self::Expr(Box::new(Expr::parse_expr(parser, 0.0)?))}
+            { TK::BuiltinType, |x| { Ok(Self::BuiltinType(Identifier::BuilinTypeName(x.span))) } };
+            or |x| { Ok(Self::Expr(Box::new(Expr::parse_expr(parser, 0.0)?.0)))}
         )
     }
 }

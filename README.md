@@ -8,7 +8,7 @@
 
 ### Variable decl
 
-```
+```javascript
 -- Mutable variable decl #
 mut foo |: 4
 
@@ -24,7 +24,7 @@ var foo_bar | Int : foo + bar
 
 ### Functions
 
-```
+```javascript
 -- Named function, must be const'ed
 const add | func [a, b: Int] -> Int :  a + b
 const sub | func [a: Int, b: Int] -> Int : {

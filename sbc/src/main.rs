@@ -47,9 +47,9 @@ fn main() -> Result<(), &'static str> {
         Command::IR => {
             println!("{}", content);
 
-            let parsed: Vec<_> = parser.collect();
+            let _parsed: Vec<_> = parser.collect();
 
-            dbg!(parsed);
+            // dbg!(parsed);
         }
         Command::Build => todo!(),
         Command::BuildRun => todo!(),

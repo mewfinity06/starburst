@@ -42,16 +42,16 @@ impl<'p> Parser<'p> {
         match cur_token.kind {
             TokenKind::Comment | TokenKind::DocComment => Ok(Node::Comment),
             // Variable decls
-            TokenKind::Mut => Ok(Node::Expr(Expr::VariableDecl(VariableDecl::parse_mut(
-                self,
-            )?))),
-            TokenKind::Val => Ok(Node::Expr(Expr::VariableDecl(VariableDecl::parse_val(
-                self,
-            )?))),
-            TokenKind::Const => Ok(Node::Expr(Expr::VariableDecl(VariableDecl::parse_const(
-                self,
-            )?))),
-            _ => return Err(ParserError::UnknownToken { token: cur_token }),
+            TokenKind::Mut => Ok(Node::Expr(Expr::VariableDecl(
+                VariableDecl::parse_mut(self)?.0,
+            ))),
+            TokenKind::Val => Ok(Node::Expr(Expr::VariableDecl(
+                VariableDecl::parse_val(self)?.0,
+            ))),
+            TokenKind::Const => Ok(Node::Expr(Expr::VariableDecl(
+                VariableDecl::parse_const(self)?.0,
+            ))),
+            _ => Err(ParserError::UnknownToken { token: cur_token }),
         }
     }
 
@@ -74,11 +74,12 @@ impl<'p> Iterator for Parser<'p> {
     fn next(&mut self) -> Option<Self::Item> {
         match self.next_node() {
             Ok(x) => Some(x),
-            Err(x) if x == ParserError::Eof => None,
             Err(x) => {
-                eprintln!("Error: {}", x);
-                if let Some(span) = x.get_span() {
-                    eprintln!("     | @ `{}`", &self.content[span.start..span.end])
+                if x != ParserError::Eof {
+                    eprintln!("Error: {}", x);
+                    if let Some(span) = x.get_span() {
+                        eprintln!("     | `{}`", &self.content[span.start..span.end])
+                    }
                 }
                 None
             }

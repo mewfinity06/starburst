@@ -1,4 +1,7 @@
 #![allow(unused_assignments)]
+#![allow(unused_variables)]
+#![allow(clippy::enum_variant_names)]
+
 // Rust
 use std::mem::zeroed;
 
@@ -17,14 +20,15 @@ use crate::{Parser, parser_error::ParserError};
 // TODO: Have multiple tk's in one body if they lead to the same action.
 //       See parse_expr loop for example
 macro_rules! expect_and_consume {
-    ($parser:ident; $({$tk:expr, | $x:ident | $action:block})*) => {
-        match $parser.next() {
+    ($parser:ident; $function_name:expr; $({$tk:expr, | $x:ident | $action:block})*) => {
+                match $parser.next() {
             $( Some(val) if val.kind == $tk => {
                 let $x = val;
                 $action
             }, )*
             Some(generic) => {
                 return Err(ParserError::UnexpectedToken {
+                    function_name: stringify!($function_name),
                     expected: vec![$($tk,)*],
                     found: generic,
                 });
@@ -32,7 +36,7 @@ macro_rules! expect_and_consume {
             None => return Err(ParserError::Eof),
         }
     };
-    ($parser:ident; $({$tk:expr, | $x:ident | $action:block})*; or | $or_x:ident | $else_branch:block) => {
+    ($parser:ident; $function_name:expr; $({$tk:expr, | $x:ident | $action:block})* or | $or_x:ident | $else_branch:block) => {
         match $parser.next() {
             $( Some(val) if val.kind == $tk => {
                 let $x = val;
@@ -68,7 +72,7 @@ impl Expr {
     pub fn parse_expr(parser: &mut Parser, min_bp: f32) -> Result<(Self, Span), ParserError> {
         let mut res_span = Span::from_range(0, 0);
 
-        let mut lhs = expect_and_consume!(parser;
+        let mut lhs = expect_and_consume!(parser; Expr::parse_expr;
             { TK::Identifier, |x| { Expr::Identifier(Identifier::Identifier(x.span)) } }
             { TK::IntLiteral, |x| { Expr::Literal(Literal::IntLiteral(x.span)) } }
         );
@@ -110,17 +114,17 @@ impl VariableDecl {
         let mut res_span = Span::from_range(0, 0);
 
         // get name
-        let name = expect_and_consume! {parser;
+        let name = expect_and_consume! {parser; VariableDecl::parse_variable_decl;
             { TK::Identifier, |x| { x.span } }
         };
 
-        let need_expl_type = expect_and_consume! {parser;
+        let need_expl_type = expect_and_consume! {parser; VariableDecl::parse_variable_decl;
             { TK::Assignment, |x| { false } }
             { TK::Pipe, |x| { true } }
         };
 
         let (expl_type, expl_type_span) = if need_expl_type {
-            expect_and_consume! {parser;
+            expect_and_consume! {parser; VariableDecl::parse_variable_decl;
                 { TK::BuiltinType, |x| { (
                     Some(Box::new(Expr::Identifier(Identifier::BuilinTypeName( x.span )))),
                     Some(x.span)
@@ -161,16 +165,19 @@ impl VariableDecl {
         ))
     }
 
-    pub fn parse_mut(parser: &mut Parser) -> Result<Self, ParserError> {
-        Ok(Self::Mut(Self::parse_variable_decl_body(parser)?.0))
+    pub fn parse_mut(parser: &mut Parser) -> Result<(Self, Span), ParserError> {
+        let (body, body_span) = Self::parse_variable_decl_body(parser)?;
+        Ok((Self::Mut(body), body_span))
     }
 
-    pub fn parse_val(parser: &mut Parser) -> Result<Self, ParserError> {
-        Ok(Self::Val(Self::parse_variable_decl_body(parser)?.0))
+    pub fn parse_val(parser: &mut Parser) -> Result<(Self, Span), ParserError> {
+        let (body, body_span) = Self::parse_variable_decl_body(parser)?;
+        Ok((Self::Val(body), body_span))
     }
 
-    pub fn parse_const(parser: &mut Parser) -> Result<Self, ParserError> {
-        Ok(Self::Const(Self::parse_variable_decl_body(parser)?.0))
+    pub fn parse_const(parser: &mut Parser) -> Result<(Self, Span), ParserError> {
+        let (body, body_span) = Self::parse_variable_decl_body(parser)?;
+        Ok((Self::Const(body), body_span))
     }
 }
 
@@ -222,7 +229,9 @@ impl FunctionDecl {
         let mut res_span = Span::from_range(0, 0);
 
         let (arg_body, arg_body_span) = ArgBody::parse_arg_body(parser)?;
-        let return_type = ReturnType::parse_return_type(parser)?;
+        let (return_type, _) = ReturnType::parse_return_type(parser)?;
+        // consume the `:`
+        parser.next();
         let (func_body, func_body_span) = FuncBody::parse_func_body(parser)?;
 
         res_span.start = arg_body_span.start;
@@ -231,7 +240,7 @@ impl FunctionDecl {
         Ok((
             Self {
                 arg_body,
-                return_type: return_type,
+                return_type,
                 func_body,
             },
             res_span,
@@ -254,8 +263,8 @@ impl ArgBody {
     pub fn parse_arg_body(parser: &mut Parser) -> Result<(Self, Span), ParserError> {
         let mut res_span: Span = Span::from_range(0, 0);
 
-        // consume LBrace
-        expect_and_consume! {parser;
+        // consume LBrack
+        expect_and_consume! {parser; ArgBody::parse_arg_body;
             { TK::LBrack, |x| { res_span.start = x.span.start + 1 } }
         };
 
@@ -264,20 +273,21 @@ impl ArgBody {
         loop {
             let mut current_arg: Arg = unsafe { zeroed() };
 
-            expect_and_consume!(parser;
+            expect_and_consume!(parser; ArgBody::parse_arg_body;
                 { TK::RBrack, |x| { break } }
                 { TK::Identifier, |x| {
                     current_arg.name = x.span;
 
-                    expect_and_consume!(parser;
+                    expect_and_consume!(parser; ArgBody::parse_arg_body;
                         // a, b: Int
                         { TK::Comma, |x| {
+                            // TODO: Backpatch arg_type
                             current_arg.arg_type = None;
                         } }
                         // a: Int, b: Int
                         { TK::Colon, |x| {
 
-                            expect_and_consume!(parser;
+                            expect_and_consume!(parser; ArgBody::parse_arg_body;
                                 { TK::BuiltinType, |x| {
                                     current_arg.arg_type = Some(Box::new(Expr::Identifier(Identifier::BuilinTypeName(x.span))));
                                 } }
@@ -302,11 +312,10 @@ pub struct FuncBody {
 
 impl FuncBody {
     pub fn parse_func_body(parser: &mut Parser) -> Result<(Self, Span), ParserError> {
-        let (res, res_span) = expect_and_consume!(parser;
+        let (res, res_span) = expect_and_consume!(parser; FuncBody::parse_func_body;
             { TK::LBrace, |x| {
                  todo!()
-            }};
-            or |x| {
+            }} or |x| {
                 let (expr, expr_span) = Expr::parse_expr(parser, 0.0)?;
                 Ok((
                     Self { exprs: vec![expr] },
@@ -329,16 +338,19 @@ pub enum ReturnType {
 }
 
 impl ReturnType {
-    pub fn parse_return_type(parser: &mut Parser) -> Result<Self, ParserError> {
+    pub fn parse_return_type(parser: &mut Parser) -> Result<(Self, Span), ParserError> {
         // skip arrow
-        expect_and_consume!(parser;
+        expect_and_consume!(parser; ReturnType::parse_return_type;
             { TK::RArrow, |x| {} }
         );
 
-        expect_and_consume!(parser;
-            { TK::Identifier, |x| { Ok(Self::Identifier(Identifier::Identifier(x.span))) } }
-            { TK::BuiltinType, |x| { Ok(Self::BuiltinType(Identifier::BuilinTypeName(x.span))) } };
-            or |x| { Ok(Self::Expr(Box::new(Expr::parse_expr(parser, 0.0)?.0)))}
+        expect_and_consume!(parser; ReturnType::parse_return_type;
+            { TK::Identifier, |x| { Ok((Self::Identifier(Identifier::Identifier(x.span)), x.span)) } }
+            { TK::BuiltinType, |x| { Ok((Self::BuiltinType(Identifier::BuilinTypeName(x.span)), x.span)) } }
+            or |x| {
+                let (expr, expr_span) = Expr::parse_expr(parser, 0.0)?;
+                Ok((Self::Expr(Box::new(expr)), expr_span))
+            }
         )
     }
 }

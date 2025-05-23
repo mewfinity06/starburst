@@ -10,6 +10,7 @@ use span::Span;
 #[derive(Debug, Eq, PartialEq, PartialOrd, Ord)]
 pub enum ParserError {
     UnexpectedToken {
+        function_name: &'static str,
         expected: Vec<TokenKind>,
         found: Token,
     },
@@ -32,11 +33,15 @@ impl ParserError {
 impl Display for ParserError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Self::UnexpectedToken { expected, found } => {
+            Self::UnexpectedToken {
+                function_name,
+                expected,
+                found,
+            } => {
                 write!(
                     f,
-                    "expected {:?} found {:?} (start: {}, end: {})",
-                    expected, found.kind, found.span.start, found.span.end
+                    "expected {:?} found {:?} (start: {}, end: {}) @ {}",
+                    expected, found.kind, found.span.start, found.span.end, function_name
                 )
             }
             Self::UnknownToken { token } => write!(
